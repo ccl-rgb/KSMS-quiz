@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>STEM & Healthcare Career Quiz</title>
+  <title>Multi-Stream Career Match Quiz</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * {
@@ -27,7 +27,7 @@
 
     .quiz-container {
       width: 100%;
-      max-width: 720px;
+      max-width: 760px;
       background: #ffffff;
       border-radius: 20px;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
@@ -55,23 +55,66 @@
       color: #94a3b8;
     }
 
+    /* SELECTOR CARDS */
+    .stream-select-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      padding: 24px;
+    }
+
+    .stream-card {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .stream-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+      border-color: #2563eb;
+    }
+
+    .stream-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .stream-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .stream-desc {
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
     /* PROGRESS BAR */
     .progress-bar-container {
       background: #e2e8f0;
       height: 6px;
       width: 100%;
+      display: none;
     }
 
     .progress-fill {
       background: #2563eb;
       height: 100%;
-      width: 20%;
+      width: 0%;
       transition: width 0.3s ease;
     }
 
     /* CARD CONTENT */
     .card-body {
       padding: 24px;
+      display: none;
     }
 
     .step-indicator {
@@ -268,11 +311,10 @@
       transition: width 0.6s ease;
     }
 
-    /* PRINT STYLING */
     @media print {
       body { background: #ffffff; padding: 0; }
       .quiz-container { box-shadow: none; border-radius: 0; max-width: 100%; }
-      .actions-row, .progress-bar-container { display: none !important; }
+      .actions-row, .progress-bar-container, #streamSelector { display: none !important; }
       .results-view { display: block !important; }
       .quiz-card { display: none !important; }
     }
@@ -290,26 +332,43 @@
 
   <div class="quiz-container">
     <div class="header">
-      <h1>STEM & Healthcare Career Quiz</h1>
-      <p>Discover which engineering or health-tech path aligns with your natural skills.</p>
+      <h1 id="mainTitle">Stream & Career Predictor Hub</h1>
+      <p id="mainSub">Select a stream to start your personalized career alignment test.</p>
     </div>
 
-    <div class="progress-bar-container">
+    <!-- STREAM SELECTOR SCREEN -->
+    <div id="streamSelector" class="stream-select-grid">
+      <div class="stream-card" onclick="startQuiz('science')">
+        <div class="stream-icon">🔬</div>
+        <div class="stream-title">Science Stream</div>
+        <div class="stream-desc">Explore PCM vs PCB, Biotech, Engineering, & Medical tracks.</div>
+      </div>
+      <div class="stream-card" onclick="startQuiz('commerce')">
+        <div class="stream-icon">📊</div>
+        <div class="stream-title">Commerce Stream</div>
+        <div class="stream-desc">Find your fit in CA, Finance, Management, & Entrepreneurship.</div>
+      </div>
+      <div class="stream-card" onclick="startQuiz('arts')">
+        <div class="stream-icon">🎨</div>
+        <div class="stream-title">Arts & Humanities</div>
+        <div class="stream-desc">Discover outcomes in Law, Psychology, Media, & UI/UX Design.</div>
+      </div>
+    </div>
+
+    <div class="progress-bar-container" id="progressBarContainer">
       <div class="progress-fill" id="progressFill"></div>
     </div>
 
-    <div class="card-body">
+    <div class="card-body" id="cardBody">
       <!-- QUESTION VIEW -->
       <div id="quizView" class="quiz-card">
         <span class="step-indicator" id="stepIndicator">QUESTION 1 OF 5</span>
         <h2 class="question-title" id="questionTitle">Loading...</h2>
 
-        <div class="options-grid" id="optionsContainer">
-          <!-- Options rendered dynamically -->
-        </div>
+        <div class="options-grid" id="optionsContainer"></div>
 
         <div class="actions-row">
-          <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()" disabled>Back</button>
+          <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()">Back</button>
           <button class="btn btn-primary" id="btnNext" onclick="nextQuestion()" disabled>Next Question</button>
         </div>
       </div>
@@ -317,93 +376,220 @@
       <!-- RESULTS VIEW -->
       <div id="resultsView" class="results-view">
         <div class="top-result-box">
-          <span class="badge-top">Your Primary Career Match</span>
-          <h2 class="top-title" id="topCareerTitle">Biomedical Engineer</h2>
-          <p class="top-desc" id="topCareerDesc"></p>
+          <span class="badge-top">Your Best Career Fit</span>
+          <h2 class="top-title" id="topCareerTitle">Title</h2>
+          <p class="top-desc" id="topCareerDesc">Description</p>
         </div>
 
-        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: #0f172a;">All Career Match Percentages:</h3>
+        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: #0f172a;">Complete Fit Breakdown:</h3>
         <div class="scores-list" id="scoresList"></div>
 
         <div class="actions-row">
-          <button class="btn btn-secondary" onclick="restartQuiz()">Restart Quiz</button>
-          <button class="btn btn-primary" onclick="printResults()">Print / Save PDF</button>
+          <button class="btn btn-secondary" onclick="resetToSelector()">Choose Another Stream</button>
+          <button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const quizData = [
-      {
-        question: "What type of problems do you enjoy solving most?",
-        options: [
-          { key: 'A', text: "A) Designing high-tech gadgets that can help save lives or monitor health." },
-          { key: 'B', text: "B) Figuring out how engines, gears, machines, or moving parts work together." },
-          { key: 'C', text: "C) Using specialized medical machines to see inside things and spot hidden details." },
-          { key: 'D', text: "D) Planning large construction projects like bridges, roads, or eco-friendly buildings." },
-          { key: 'E', text: "E) Creating healthy meal plans and exploring how food affects energy and wellness." }
+    const streamQuizzes = {
+      science: {
+        title: "Science Stream Career Quiz",
+        profiles: {
+          'A': { title: "Software & AI Engineer (PCM)", desc: "High aptitude for coding, algorithms, logic, and building digital systems." },
+          'B': { title: "Medical Specialist / Surgeon (PCB)", desc: "Strong focus on human biology, clinical care, empathy, and life sciences." },
+          'C': { title: "Biotech & Pharmaceutical Researcher (PCB/PCMB)", desc: "Passionate about genetics, drug research, biochemistry, and lab experimentation." },
+          'D': { title: "Aerospace & Mechanical Engineer (PCM)", desc: "Loves physical forces, machinery, CAD modeling, and structural design." }
+        },
+        questions: [
+          {
+            question: "Which type of challenge interests you most?",
+            options: [
+              { key: 'A', text: "Developing complex algorithms or intelligent software apps." },
+              { key: 'B', text: "Diagnosing ailments and directly helping patient recovery." },
+              { key: 'C', text: "Experimenting with cellular DNA, micro-organisms, and formulas." },
+              { key: 'D', text: "Designing high-speed vehicles, rockets, or heavy machinery." }
+            ]
+          },
+          {
+            question: "Choose your favorite lab or practical activity:",
+            options: [
+              { key: 'A', text: "Computer Science & Robotics Programming Lab" },
+              { key: 'B', text: "Human Anatomy & Dissection/Microscope Lab" },
+              { key: 'C', text: "Biochemistry & Organic Chemical Reaction Analysis" },
+              { key: 'D', text: "Physics Mechanics & Engineering Drawing Workshop" }
+            ]
+          },
+          {
+            question: "Where do you see yourself working in 10 years?",
+            options: [
+              { key: 'A', text: "A global tech company or AI development hub." },
+              { key: 'B', text: "A specialized surgical hospital or diagnostic clinic." },
+              { key: 'C', text: "A state-of-the-art pharmaceutical research laboratory." },
+              { key: 'D', text: "An aerospace facility, automotive plant, or CAD design center." }
+            ]
+          },
+          {
+            question: "What subject combination appeals to you most?",
+            options: [
+              { key: 'A', text: "Physics + Math + Computer Science" },
+              { key: 'B', text: "Physics + Chemistry + Biology" },
+              { key: 'C', text: "Chemistry + Biology + Biotechnology" },
+              { key: 'D', text: "Physics + Chemistry + Higher Mathematics" }
+            ]
+          },
+          {
+            question: "What is your main problem-solving strength?",
+            options: [
+              { key: 'A', text: "Abstract numerical logic and automation thinking" },
+              { key: 'B', text: "Calmness, empathy, and diagnostic observation" },
+              { key: 'C', text: "Curiosity for molecular science and deep research" },
+              { key: 'D', text: "Spatial visualization and understanding structural forces" }
+            ]
+          }
         ]
       },
-      {
-        question: "Which school subject or lab activity sounds most exciting to you?",
-        options: [
-          { key: 'A', text: "A) Biology + Physics lab (e.g., studying how muscles move or building artificial joints)." },
-          { key: 'B', text: "B) Physics + Geometry (e.g., building straw towers or studying forces and motion)." },
-          { key: 'C', text: "C) Human Anatomy + Imaging (e.g., studying human bones and how X-rays work)." },
-          { key: 'D', text: "D) Geography + Mathematics (e.g., calculating weights, terrain, and map layouts)." },
-          { key: 'E', text: "E) Chemistry + Biology (e.g., studying nutrients, calories, and body metabolism)." }
+      commerce: {
+        title: "Commerce Stream Career Quiz",
+        profiles: {
+          'A': { title: "Chartered Accountant / Financial Auditor", desc: "Top skills in auditing, corporate taxation, balance sheets, and compliance." },
+          'B': { title: "Investment Banker & Financial Analyst", desc: "Thrives in stock market analysis, valuation, portfolios, and capital growth." },
+          'C': { title: "Startup Founder & Corporate Manager", desc: "Natural leader interested in business models, marketing, and scaling companies." },
+          'D': { title: "Corporate Lawyer / Legal Advisor", desc: "Combines commercial knowledge with legal frameworks, contracts, and negotiations." }
+        },
+        questions: [
+          {
+            question: "What business activity excites you most?",
+            options: [
+              { key: 'A', text: "Finding accounting errors and ensuring strict financial precision." },
+              { key: 'B', text: "Predicting stock trends, market movements, and investment growth." },
+              { key: 'C', text: "Launching new products, managing teams, and scaling a business." },
+              { key: 'D', text: "Drafting corporate contracts, mergers, and legal agreements." }
+            ]
+          },
+          {
+            question: "Which subject sounds most interesting?",
+            options: [
+              { key: 'A', text: "Financial Accountancy & Bookkeeping" },
+              { key: 'B', text: "Applied Mathematics & Financial Economics" },
+              { key: 'C', text: "Business Studies & Marketing Strategy" },
+              { key: 'D', text: "Commercial Law & Business Regulations" }
+            ]
+          },
+          {
+            question: "How do you prefer to handle numbers?",
+            options: [
+              { key: 'A', text: "Systematic auditing of revenue, balance sheets, and taxes." },
+              { key: 'B', text: "Calculating profit margins, investment returns, and valuation ratios." },
+              { key: 'C', text: "Budgeting project costs and managing operational cash flows." },
+              { key: 'D', text: "Using financial figures as evidence in legal and corporate debates." }
+            ]
+          },
+          {
+            question: "What type of environment suits you best?",
+            options: [
+              { key: 'A', text: "A prestigious Big-4 accounting firm." },
+              { key: 'B', text: "A bustling stock exchange or investment bank floor." },
+              { key: 'C', text: "A fast-paced startup office or corporate boardroom." },
+              { key: 'D', text: "A corporate legal department or dispute arbitration firm." }
+            ]
+          },
+          {
+            question: "What is your core professional superpower?",
+            options: [
+              { key: 'A', text: "Unmatched attention to numerical accuracy and compliance." },
+              { key: 'B', text: "Quantitative financial forecasting and risk calculation." },
+              { key: 'C', text: "Strategic thinking, persuasion, and team leadership." },
+              { key: 'D', text: "Critical reasoning, debate, and contractual analysis." }
+            ]
+          }
         ]
       },
-      {
-        question: "If you had 30 minutes to work on a hands-on project today, what would you choose?",
-        options: [
-          { key: 'A', text: "A) Sketch a mechanical prosthetic arm with rubber bands and levers." },
-          { key: 'B', text: "B) Take apart a mechanical clock or toy car to see how the gears mesh." },
-          { key: 'C', text: "C) Examine anatomical charts and learn how diagnostic scanners work." },
-          { key: 'D', text: "D) Build a model bridge out of popsicle sticks and test how much weight it holds." },
-          { key: 'E', text: "E) Compare the nutrition labels of 3 favorite snacks and calculate their fiber and protein ratios." }
-        ]
-      },
-      {
-        question: "What kind of work environment do you see yourself enjoying most?",
-        options: [
-          { key: 'A', text: "A) A high-tech medical research lab or device manufacturing facility." },
-          { key: 'B', text: "B) A workshop, automotive plant, or robotics lab with heavy machinery and CAD software." },
-          { key: 'C', text: "C) A hospital diagnostic suite operating advanced scanners alongside medical teams." },
-          { key: 'D', text: "D) An active construction site or engineering office planning urban infrastructure." },
-          { key: 'E', text: "E) A health clinic, sports center, or hospital advising patients on nutrition." }
-        ]
-      },
-      {
-        question: "What is your primary career superpower?",
-        options: [
-          { key: 'A', text: "A) Combining biology with technical design to solve health challenges." },
-          { key: 'B', text: "B) Understanding physical forces, mechanics, and 3D space." },
-          { key: 'C', text: "C) High attention to detail and precision with diagnostic technology." },
-          { key: 'D', text: "D) Thinking big and designing structures that whole communities rely on." },
-          { key: 'E', text: "E) Empathy, active listening, and a passion for healthy living." }
+      arts: {
+        title: "Arts & Humanities Career Quiz",
+        profiles: {
+          'A': { title: "Corporate Lawyer / Public Policy Analyst", desc: "Strong analytical reading, constitutional logic, and passion for governance." },
+          'B': { title: "UI/UX & Visual Communication Designer", desc: "Blends creative aesthetics, digital tech, and user empathy." },
+          'C': { title: "Journalist & Mass Media Strategist", desc: "Thrives on investigative storytelling, news reporting, and public relations." },
+          'D': { title: "Clinical Psychologist & Counselor", desc: "Deep interest in human behavior, emotional health, and mental wellness." }
+        },
+        questions: [
+          {
+            question: "What kind of project would you enjoy most?",
+            options: [
+              { key: 'A', text: "Debating social policies, laws, and historical civil rights cases." },
+              { key: 'B', text: "Designing a sleek mobile app interface and visual graphics." },
+              { key: 'C', text: "Writing an investigative article or producing a documentary." },
+              { key: 'D', text: "Studying human emotions, stress patterns, and social behavior." }
+            ]
+          },
+          {
+            question: "Which subject combination sounds most compelling?",
+            options: [
+              { key: 'A', text: "Political Science + History + Law Studies" },
+              { key: 'B', text: "Fine Arts + Graphic Design + Digital Media" },
+              { key: 'C', text: "Mass Communication + Journalism + Literature" },
+              { key: 'D', text: "Psychology + Sociology + Human Development" }
+            ]
+          },
+          {
+            question: "What is your primary mode of expression?",
+            options: [
+              { key: 'A', text: "Persuasive structured writing, debates, and logical arguments." },
+              { key: 'B', text: "Visual illustrations, color harmony, and digital layouts." },
+              { key: 'C', text: "Storytelling, interviews, podcasts, and video media." },
+              { key: 'D', text: "Active listening, counseling, and empathetic conversation." }
+            ]
+          },
+          {
+            question: "What workplace setting do you prefer?",
+            options: [
+              { key: 'A', text: "High Courts, think tanks, or government policy institutes." },
+              { key: 'B', text: "Creative design agencies, game studios, or tech firms." },
+              { key: 'C', text: "Newsrooms, digital media houses, or broadcasting studios." },
+              { key: 'D', text: "Mental health clinics, therapy centers, or wellness organizations." }
+            ]
+          },
+          {
+            question: "What is your biggest personal strength?",
+            options: [
+              { key: 'A', text: "Critical reasoning and understanding complex governance rules." },
+              { key: 'B', text: "Visual creativity and problem-solving through design." },
+              { key: 'C', text: "Captivating public communication and media production." },
+              { key: 'D', text: "Empathy, intuition, and understanding the human mind." }
+            ]
+          }
         ]
       }
-    ];
-
-    const careerProfiles = {
-      'A': { title: "Biomedical Engineer", desc: "You love bridging medicine and technology to design life-saving devices, prosthetics, and health-monitoring equipment." },
-      'B': { title: "Mechanical Engineer", desc: "You have a natural knack for machinery, engines, physical forces, robotics, and moving parts." },
-      'C': { title: "Radiologic Technologist", desc: "You excel in precision and tech-driven diagnostic imaging inside healthcare (X-Rays, MRIs, CT Scans)." },
-      'D': { title: "Civil & Infrastructure Engineer", desc: "You are a big-picture thinker who wants to build the physical world around us—bridges, roads, eco-friendly buildings, and urban systems." },
-      'E': { title: "Clinical Dietitian & Nutritionist", desc: "You are passionate about human wellness, nutrition science, metabolism, and helping people lead healthier lives." }
     };
 
+    let activeStreamKey = null;
+    let activeQuiz = null;
     let currentQuestionIndex = 0;
     let selectedAnswers = {};
 
+    function startQuiz(streamKey) {
+      activeStreamKey = streamKey;
+      activeQuiz = streamQuizzes[streamKey];
+      currentQuestionIndex = 0;
+      selectedAnswers = {};
+
+      document.getElementById('streamSelector').style.display = 'none';
+      document.getElementById('progressBarContainer').style.display = 'block';
+      document.getElementById('cardBody').style.display = 'block';
+      document.getElementById('mainTitle').innerText = activeQuiz.title;
+      document.getElementById('mainSub').innerText = "Answer all questions to view your career alignment scores.";
+
+      renderQuestion();
+    }
+
     function renderQuestion() {
-      const q = quizData[currentQuestionIndex];
-      document.getElementById('stepIndicator').innerText = `QUESTION ${currentQuestionIndex + 1} OF ${quizData.length}`;
+      const q = activeQuiz.questions[currentQuestionIndex];
+      document.getElementById('stepIndicator').innerText = `QUESTION ${currentQuestionIndex + 1} OF ${activeQuiz.questions.length}`;
       document.getElementById('questionTitle').innerText = q.question;
 
-      const progressPercent = ((currentQuestionIndex + 1) / quizData.length) * 100;
+      const progressPercent = ((currentQuestionIndex + 1) / activeQuiz.questions.length) * 100;
       document.getElementById('progressFill').style.width = `${progressPercent}%`;
 
       const optionsContainer = document.getElementById('optionsContainer');
@@ -421,9 +607,9 @@
         optionsContainer.appendChild(card);
       });
 
-      document.getElementById('btnPrev').disabled = currentQuestionIndex === 0;
+      document.getElementById('btnPrev').disabled = false;
       document.getElementById('btnNext').disabled = !selectedAnswers[currentQuestionIndex];
-      document.getElementById('btnNext').innerText = currentQuestionIndex === quizData.length - 1 ? "See Results" : "Next Question";
+      document.getElementById('btnNext').innerText = currentQuestionIndex === activeQuiz.questions.length - 1 ? "See Results" : "Next Question";
     }
 
     function selectOption(key) {
@@ -432,7 +618,7 @@
     }
 
     function nextQuestion() {
-      if (currentQuestionIndex < quizData.length - 1) {
+      if (currentQuestionIndex < activeQuiz.questions.length - 1) {
         currentQuestionIndex++;
         renderQuestion();
       } else {
@@ -444,6 +630,8 @@
       if (currentQuestionIndex > 0) {
         currentQuestionIndex--;
         renderQuestion();
+      } else {
+        resetToSelector();
       }
     }
 
@@ -451,7 +639,7 @@
       document.getElementById('quizView').style.display = 'none';
       document.getElementById('resultsView').style.display = 'block';
 
-      const counts = { 'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0 };
+      const counts = { 'A': 0, 'B': 0, 'C': 0, 'D': 0 };
       Object.values(selectedAnswers).forEach(key => counts[key]++);
 
       let topKey = 'A';
@@ -463,20 +651,22 @@
         }
       });
 
-      document.getElementById('topCareerTitle').innerText = careerProfiles[topKey].title;
-      document.getElementById('topCareerDesc').innerText = careerProfiles[topKey].desc;
+      const profile = activeQuiz.profiles[topKey];
+      document.getElementById('topCareerTitle').innerText = profile.title;
+      document.getElementById('topCareerDesc').innerText = profile.desc;
 
       const scoresList = document.getElementById('scoresList');
       scoresList.innerHTML = '';
 
       Object.keys(counts).forEach(key => {
-        const pct = Math.round((counts[key] / quizData.length) * 100);
+        const pct = Math.round((counts[key] / activeQuiz.questions.length) * 100);
+        const p = activeQuiz.profiles[key];
         const card = document.createElement('div');
         card.className = 'score-card';
         card.innerHTML = `
           <div class="score-header">
-            <span>${careerProfiles[key].title}</span>
-            <span>${pct}% (${counts[key]}/${quizData.length})</span>
+            <span>${p.title}</span>
+            <span>${pct}% (${counts[key]}/${activeQuiz.questions.length})</span>
           </div>
           <div class="score-bar-bg">
             <div class="score-bar-fill" style="width: ${pct}%"></div>
@@ -486,20 +676,15 @@
       });
     }
 
-    function restartQuiz() {
-      currentQuestionIndex = 0;
-      selectedAnswers = {};
-      document.getElementById('resultsView').style.display = 'none';
+    function resetToSelector() {
+      document.getElementById('streamSelector').style.display = 'grid';
+      document.getElementById('progressBarContainer').style.display = 'none';
+      document.getElementById('cardBody').style.display = 'none';
       document.getElementById('quizView').style.display = 'block';
-      renderQuestion();
+      document.getElementById('resultsView').style.display = 'none';
+      document.getElementById('mainTitle').innerText = "Stream & Career Predictor Hub";
+      document.getElementById('mainSub').innerText = "Select a stream to start your personalized career alignment test.";
     }
-
-    function printResults() {
-      window.print();
-    }
-
-    // Initialize
-    renderQuestion();
   </script>
 </body>
 </html>
